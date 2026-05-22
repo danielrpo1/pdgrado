@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datos (no versionar archivos pesados)
+data/raw/
+data/processed/
+*.csv
+*.7z
+*.zip
+*.parquet
+
+# Outputs locales
+outputs/
+*.xlsx
+reports/*.xlsx
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Colab / credenciales
+kaggle.json
+*.json.secret
