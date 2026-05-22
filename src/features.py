@@ -1,46 +1,81 @@
-"""Agregación de transacciones por usuario (msno)."""
+"""Features numéricas por usuario para clustering (asesoría: transacciones primero)."""
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 
-def to_julian_days(series: pd.Series) -> pd.Series:
-    """Convierte fechas a días julianos (enteros) para operaciones numéricas."""
-    dt = pd.to_datetime(series, errors="coerce")
-    origin = pd.Timestamp("1965-01-01")
-    return (dt - origin).dt.days
-
-
-def build_user_features(transactions: pd.DataFrame) -> pd.DataFrame:
+def build_user_features(
+    transactions: pd.DataFrame,
+    members: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     """
-    Agrega transactions.csv a nivel msno con variables numéricas
-    recomendadas en asesoría.
+    Agrega transactions_v2 por msno.
+    Nombres alineados con apostaremczak (price_ntd, amount_paid_ntd, etc.).
     """
     df = transactions.copy()
-    df["transaction_date_julian"] = to_julian_days(df["transaction_date"])
-    df["membership_expire_date_julian"] = to_julian_days(df["membership_expire_date"])
+    if "user_id" in df.columns and "msno" not in df.columns:
+        df = df.rename(columns={"user_id": "msno"})
+
+    if members is not None:
+        m = members.copy()
+        if "user_id" in m.columns:
+            m = m.rename(columns={"user_id": "msno"})
+        df = df.merge(m[["msno", "registration_init_time"]], on="msno", how="left")
+        df["time_since_registration_days"] = (
+            df["transaction_date"] - df["registration_init_time"]
+        ).dt.days
+
+    rename = {}
+    if "payment_plan_days" in df.columns:
+        rename["payment_plan_days"] = "purchased_membership_length_days"
+    if "plan_list_price" in df.columns:
+        rename["plan_list_price"] = "price_ntd"
+    if "actual_amount_paid" in df.columns:
+        rename["actual_amount_paid"] = "amount_paid_ntd"
+    df = df.rename(columns=rename)
+
+    df["discount"] = df["price_ntd"] - df["amount_paid_ntd"]
+    df["is_discount"] = (df["discount"] > 0).astype("uint8")
 
     grouped = df.groupby("msno", as_index=False).agg(
-        payment_plan_days_mean=("payment_plan_days", "mean"),
-        plan_list_price_mean=("plan_list_price", "mean"),
-        actual_amount_paid_sum=("actual_amount_paid", "sum"),
-        actual_amount_paid_mean=("actual_amount_paid", "mean"),
+        purchased_membership_length_days_mean=("purchased_membership_length_days", "mean"),
+        price_ntd_mean=("price_ntd", "mean"),
+        amount_paid_ntd_sum=("amount_paid_ntd", "sum"),
+        amount_paid_ntd_mean=("amount_paid_ntd", "mean"),
         payment_num_total_max=("payment_num_total", "max"),
         transaction_count=("msno", "count"),
         cancel_count=("is_cancel", "sum"),
         auto_renew_ratio=("is_auto_renew", "mean"),
-        last_expire_julian=("membership_expire_date_julian", "max"),
-        first_tx_julian=("transaction_date_julian", "min"),
-        last_tx_julian=("transaction_date_julian", "max"),
+        first_tx=("transaction_date", "min"),
+        last_tx=("transaction_date", "max"),
+        last_expire=("membership_expire_date", "max"),
+        time_since_registration_days_mean=("time_since_registration_days", "mean"),
+        discount_mean=("discount", "mean"),
+        is_discount_ratio=("is_discount", "mean"),
     )
 
-    grouped["days_active_span"] = (
-        grouped["last_tx_julian"] - grouped["first_tx_julian"]
-    ).clip(lower=0)
+    grouped["days_active_span"] = (grouped["last_tx"] - grouped["first_tx"]).dt.days.clip(
+        lower=0
+    )
     grouped["days_until_expire"] = (
-        grouped["last_expire_julian"] - grouped["last_tx_julian"]
-    )
-
+        grouped["last_expire"] - grouped["last_tx"]
+    ).dt.days
+    grouped = grouped.drop(columns=["first_tx", "last_tx", "last_expire"])
     return grouped
+
+
+def attach_profile_for_characterization(
+    features: pd.DataFrame,
+    members: pd.DataFrame,
+    train: pd.DataFrame,
+) -> pd.DataFrame:
+    """Une is_churn y columnas categóricas (no para k-means)."""
+    m = members.copy()
+    if "user_id" in m.columns:
+        m = m.rename(columns={"user_id": "msno"})
+    profile_cols = ["msno", "city", "gender", "registered_via"]
+    profile_cols = [c for c in profile_cols if c in m.columns]
+    out = features.merge(train[["msno", "is_churn"]], on="msno", how="inner")
+    out = out.merge(m[profile_cols], on="msno", how="left")
+    return out

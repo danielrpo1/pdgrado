@@ -30,3 +30,6 @@ reports/*.xlsx
 # Colab / credenciales
 kaggle.json
 *.json.secret
+
+# Referencia clonada (mantener solo en local)
+reference/churn-prediction/

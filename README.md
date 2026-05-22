@@ -10,9 +10,10 @@ Segmentación multidimensional de usuarios de una plataforma de streaming (datas
 
 ## Dataset
 
-- **Competencia:** [WSDM KKBox's Churn Prediction Challenge](https://www.kaggle.com/competitions/kkbox-churn-prediction-challenge)
-- **Archivos principales:** `train.csv`, `members.csv`, `transactions.csv`, `user_logs.csv` (~30 GB)
-- **Estrategia de volumen:** piloto con **1.000 usuarios** → escalado incremental
+- **Referencia de datos:** [apostaremczak/churn-prediction](https://github.com/apostaremczak/churn-prediction) → Kaggle [KKBox Churn](https://www.kaggle.com/competitions/kkbox-churn-prediction-challenge)
+- **Archivos (en `data/raw/`):** `train_v2.csv`, `members_v3.csv`, `transactions_v2.csv`
+- **Setup:** [`docs/DATA_SETUP.md`](docs/DATA_SETUP.md)
+- **Estrategia de volumen:** piloto **1.000 usuarios** → escalado incremental
 
 ## Enfoque metodológico (2 fases)
 
@@ -49,9 +50,18 @@ Kaggle se usa para descargar datos y, si aplica, escalar con GPU. Detalle en [`d
 
 ## Inicio rápido
 
-1. Clonar el repo y abrir `notebooks/01_eda_clustering_piloto.ipynb` en Colab.
-2. Configurar API de Kaggle (ver sección del notebook).
-3. Ejecutar EDA → feature engineering → K-Means (k=5) → exportar 5 hojas Excel.
+```bash
+# 1. Referencia (opcional, local)
+bash scripts/setup_reference.sh
+
+# 2. Descargar CSV (Kaggle API) — ver DATA_SETUP.md
+bash scripts/download_data.sh
+
+# 3. Piloto clustering
+python scripts/run_pilot.py
+```
+
+O en Colab: `notebooks/01_eda_clustering_piloto.ipynb`
 
 ## Licencia
 
