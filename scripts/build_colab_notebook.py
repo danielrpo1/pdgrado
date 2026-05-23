@@ -58,7 +58,7 @@ La idea central es salir del esquema simple “se va / no se va”. En suscripci
 Se clona el repositorio del proyecto y se instalan las dependencias. Los datos pueden estar ya en `data/raw/` o descargarse de Kaggle en una nueva sesión.
 """),
         code("""
-!pip install -q kaggle pyarrow openpyxl scikit-learn seaborn matplotlib
+!pip install -q kaggle pyarrow openpyxl scikit-learn seaborn matplotlib scipy
 
 import sys
 from pathlib import Path
@@ -317,9 +317,152 @@ for cat in sorted(df['categoria_riesgo'].unique()):
 """),
         md("""
 ---
-## 7. Exportación a Excel
+## 7. Análisis más profundo de las categorías
 
-Se genera un libro con **cinco hojas** (`riesgo_0` … `riesgo_4`) para revisar usuarios por segmento fuera de Python.
+Los gráficos anteriores muestran **promedios y distribuciones**. Para sacar **insights** (qué diferencia de verdad cada grupo, y con qué fuerza), conviene combinar varias herramientas — sin saltar todavía a la red neuronal de la Fase 2.
+
+| Objetivo | Herramienta | Para qué sirve |
+|----------|-------------|----------------|
+| ¿Qué tan grave es cada grupo vs. el promedio? | **Lift / ratio de churn** | Traduce % a “X veces más riesgo que la base” |
+| ¿Ciudad, género, canal se asocian al segmento? | **Tablas cruzadas + Chi-cuadrado** | Perfil cualitativo con respaldo estadístico |
+| ¿Qué variables numéricas separan grupos? | **Kruskal-Wallis** (no paramétrico) | Compara medianas entre categorías |
+| ¿Qué variables pesan más al distinguir grupos? | **Random Forest** (importancia) | Ranking de drivers del segmento |
+| ¿Reglas legibles tipo negocio? | **Árbol de decisión** (poca profundidad) | “Si cancel_count > 2 → suele ir a riesgo 3” |
+| ¿Se ven separados en 2D? | **PCA** | Visualizar solapamiento entre categorías |
+
+> **Nota:** Estas herramientas **explican** los clusters que ya salieron de K-Means; no reemplazan el clustering. En Fase 2 un clasificador neuronal **predice** la categoría; aquí se **interpreta**.
+"""),
+        code("""
+# 7.1 Lift: cuántas veces más churn que el promedio de la muestra
+churn_global = df['is_churn'].mean()
+lift = resumen.copy()
+lift['lift_vs_promedio'] = (lift['churn_rate'] / churn_global).round(2)
+lift['churn_%'] = (lift['churn_rate'] * 100).round(1)
+lift[['n_users', 'churn_%', 'lift_vs_promedio']]
+
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.bar(lift.index.astype(str), lift['lift_vs_promedio'], color=colores, edgecolor='white')
+ax.axhline(1.0, color='gray', linestyle='--', label='Promedio muestra (lift=1)')
+ax.set_xlabel('Categoría de riesgo')
+ax.set_ylabel('Lift de churn')
+ax.set_title('Figura 6 — Riesgo relativo vs. promedio de la muestra')
+ax.legend()
+plt.tight_layout()
+plt.show()
+"""),
+        code("""
+# 7.2 Perfil categórico: ¿cómo se reparte género / canal por categoría?
+from scipy.stats import chi2_contingency
+
+def tabla_perfil(col, top_n=8):
+    if col not in df.columns:
+        return
+    top_vals = df[col].value_counts().head(top_n).index
+    sub = df[df[col].isin(top_vals)].copy()
+    ct = pd.crosstab(sub['categoria_riesgo'], sub[col], normalize='index') * 100
+    chi2, p, _, _ = chi2_contingency(pd.crosstab(df['categoria_riesgo'], df[col]))
+    print(f'\\n=== {col} (Chi² p-value: {p:.2e}) ===')
+    display(ct.round(1))
+    ct.plot(kind='bar', stacked=True, figsize=(10, 4), colormap='tab20')
+    plt.title(f'Composición de {col} dentro de cada categoría (%)')
+    plt.xlabel('Categoría de riesgo')
+    plt.ylabel('% dentro del segmento')
+    plt.legend(title=col, bbox_to_anchor=(1.02, 1))
+    plt.tight_layout()
+    plt.show()
+
+for col in ['gender', 'registered_via']:
+    tabla_perfil(col)
+"""),
+        code("""
+# 7.3 Variables numéricas: ¿las medianas difieren entre categorías?
+from scipy.stats import kruskal
+
+filas = []
+for col in cols_cluster:
+    grupos = [df.loc[df['categoria_riesgo'] == c, col].dropna() for c in sorted(df['categoria_riesgo'].unique())]
+    stat, p = kruskal(*grupos)
+    filas.append({'variable': col, 'p_value': p, 'significativo_5%': p < 0.05})
+
+kw = pd.DataFrame(filas).sort_values('p_value')
+print('Variables con mayor evidencia de diferencia entre segmentos (Kruskal-Wallis):')
+display(kw.head(10))
+
+# Comparación vs categoría 0 (referencia de bajo riesgo)
+ref = df[df['categoria_riesgo'] == 0][cols_cluster].mean()
+diff = df.groupby('categoria_riesgo')[cols_cluster].mean()
+diff_pct = ((diff - ref) / (ref.abs() + 1e-9) * 100).round(0)
+plt.figure(figsize=(12, 5))
+sns.heatmap(diff_pct, annot=True, fmt='.0f', cmap='RdBu_r', center=0)
+plt.title('Figura 7 — Cambio % del promedio vs. categoría 0 (referencia)')
+plt.xlabel('Variable')
+plt.ylabel('Categoría de riesgo')
+plt.tight_layout()
+plt.show()
+"""),
+        code("""
+# 7.4 Importancia de variables para distinguir categorías (Random Forest)
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+y = df['categoria_riesgo'].astype(int)
+X = df[cols_cluster].fillna(0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=RANDOM_STATE, stratify=y)
+
+rf = RandomForestClassifier(n_estimators=200, random_state=RANDOM_STATE, n_jobs=-1, class_weight='balanced')
+rf.fit(X_train, y_train)
+acc = rf.score(X_test, y_test)
+print(f'Exactitud al predecir categoría (solo para interpretar, no es Fase 2): {acc:.2%}')
+
+imp = pd.Series(rf.feature_importances_, index=cols_cluster).sort_values(ascending=True)
+imp.plot(kind='barh', figsize=(9, 5), color='steelblue')
+plt.title('Figura 8 — Variables que más ayudan a separar las 5 categorías')
+plt.xlabel('Importancia (Random Forest)')
+plt.tight_layout()
+plt.show()
+imp.tail(8)
+"""),
+        code("""
+# 7.5 Reglas simples de negocio (árbol poco profundo)
+from sklearn.tree import DecisionTreeClassifier, export_text
+
+tree = DecisionTreeClassifier(max_depth=3, random_state=RANDOM_STATE, class_weight='balanced')
+tree.fit(X_train, y_train)
+print('Reglas aproximadas (árbol profundidad 3):')
+print(export_text(tree, feature_names=list(cols_cluster)))
+print(f'Exactitud en test: {tree.score(X_test, y_test):.2%}')
+"""),
+        code("""
+# 7.6 ¿Los grupos se ven separados? (PCA en 2D)
+from sklearn.decomposition import PCA
+
+X_scaled = (X - X.mean()) / (X.std() + 1e-9)
+pca = PCA(n_components=2, random_state=RANDOM_STATE)
+coords = pca.fit_transform(X_scaled)
+plot_df = pd.DataFrame({'pc1': coords[:, 0], 'pc2': coords[:, 1], 'categoria': df['categoria_riesgo']})
+
+plt.figure(figsize=(9, 6))
+sns.scatterplot(data=plot_df, x='pc1', y='pc2', hue='categoria', palette='RdYlGn_r', alpha=0.35, s=18)
+plt.title(f'Figura 9 — PCA (varianza explicada: {pca.explained_variance_ratio_.sum():.1%})')
+plt.tight_layout()
+plt.show()
+"""),
+        md("""
+### Cómo leer estos resultados
+
+- **Lift > 1** en categorías altas confirma que el segmento es más riesgoso que el promedio de la muestra.
+- **Chi-cuadrado con p bajo** en género o canal sugiere que el perfil cualitativo cambia entre categorías (no implica causalidad).
+- **Kruskal / heatmap vs. categoría 0** muestra en qué variables cada grupo se aleja del “bajo riesgo”.
+- **Random Forest y árbol** ayudan a priorizar variables para el informe y para la Fase 2; el árbol da frases casi listas para documentar.
+- **PCA** indica si hay solapamiento: si los colores se mezclan mucho, K-Means podría necesitar más features o otro k.
+
+El **Excel** sigue siendo útil para revisar casos puntuales; este bloque resume **patrones** con más respaldo.
+"""),
+        md("""
+---
+## 8. Exportación a Excel (opcional)
+
+Libro con **cinco hojas** (`riesgo_0` … `riesgo_4`) para filtrar usuarios concretos en hoja de cálculo. Complementa el análisis anterior; no reemplaza los gráficos ni las pruebas estadísticas.
 """),
         code("""
 from src.clustering import export_clusters_to_excel
@@ -337,12 +480,12 @@ if 'google.colab' in sys.modules:
 """),
         md("""
 ---
-## 8. Conclusiones y siguientes pasos
+## 9. Conclusiones y siguientes pasos
 
 ### Hallazgos de esta fase
 - Pipeline reproducible con datos KKBox y muestra ampliable (1k → **10k**).
 - Cinco categorías con **gradación clara** de churn en la muestra analizada.
-- Material listo para informe: gráficos, tabla resumen y Excel por segmento.
+- Material listo para informe: gráficos, análisis de perfiles (lift, Chi², Kruskal, RF, árbol, PCA) y Excel opcional.
 
 ### Próximos pasos
 - Completar marco teórico (clasificación multidimensional vs. modelos binarios).
