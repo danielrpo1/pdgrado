@@ -1,22 +1,20 @@
-# Mi notebook en Google Colab
+# Notebook Colab del piloto
 
-Profesor, dejé el piloto documentado aquí:
+Enlace directo:
 
-**https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb**
+https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb
 
-## Qué va a ver al abrirlo
+## Contenido
 
-El archivo en GitHub **ya trae ejecutadas** las celdas de mi corrida: tablas, gráficos de churn por categoría, heatmap de perfiles y el texto donde explico cómo leo cada grupo de riesgo.
+El notebook documenta la Fase 1 con **10.000 usuarios**, clustering en cinco categorías de riesgo, gráficos y exportación a Excel. En GitHub viene **ya ejecutado**: tablas y figuras visibles sin correr celdas.
 
-No necesita correr nada para revisar los resultados. Si quiere repetir el análisis en Colab, puede usar **Runtime → Run all** (en ese caso hace falta token de Kaggle o subir los CSV a Drive; en el notebook dejo una nota breve al respecto).
+Para repetir el análisis en Colab: **Runtime → Run all** (requiere datos en `data/raw/` o descarga desde Kaggle según la celda correspondiente).
 
-## Contenido del cuaderno
+## Secciones
 
-- Por qué elegí 5 categorías de riesgo y no un modelo binario
-- Cómo cargué los datos de KKBox
-- Muestra de 1.000 usuarios
-- K-Means y ordenamiento de riesgo 0 (bajo) a 4 (alto)
-- Mis interpretaciones para retención en streaming
-- Exportación del Excel con cinco hojas
-
-— Daniel Restrepo Ospina
+- Contexto del problema (riesgo en 5 niveles vs. churn binario)
+- Carga de datos KKBox
+- Muestra estratificada de 10k
+- K-Means y ordenamiento por % de churn
+- Interpretación y perfiles
+- Excel con cinco hojas

@@ -1,48 +1,44 @@
-# Notas para mi reunión con el asesor
+# Avance del piloto — notas de seguimiento
 
-**Daniel Restrepo Ospina** — próxima semana
+**Daniel Restrepo Ospina**
 
-## Lo que acordamos (8 abr 2026)
+## Enfoque de la Fase 1
 
-1. Empezar por **5 clusters de riesgo**, no por red neuronal.
-2. Piloto con **~1.000 usuarios**.
-3. Priorizar **`transactions`** y variables **numéricas**; categóricas para perfil.
-4. Exportar usuarios en **5 hojas Excel**.
-5. Hablar de **riesgo / prospectiva**, no solo churn sí/no.
-6. Trabajar primero en muestra pequeña (Colab me sirvió para eso).
+- Cinco categorías de riesgo vía clustering (no modelo binario primero).
+- Variables numéricas de `transactions`; categóricas para perfil.
+- Exportación a Excel (cinco hojas).
+- Piloto ampliado de **1.000 → 10.000 usuarios** para segmentos más estables.
 
-## Lo que le llevo en esta reunión
+## Entregables en el repositorio
 
-| Entregable | Dónde |
-|------------|-------|
-| Repositorio GitHub | https://github.com/danielrpo1/pdgrado |
-| Notebook Colab **ya ejecutado** (gráficos + interpretación) | `notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` |
-| Borrador contexto y vacíos | `docs/01`, `docs/02` |
-| Pregunta de investigación (5 categorías) | `docs/03` |
-| Excel cinco hojas | `outputs/clusters/usuarios_por_riesgo.xlsx` (local) |
+| Item | Ubicación |
+|------|-----------|
+| Código y pipeline | https://github.com/danielrpo1/pdgrado |
+| Notebook Colab ejecutado | `notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` |
+| Contexto y vacíos (borrador) | `docs/01`, `docs/02` |
+| Preguntas de investigación | `docs/03` |
+| Excel por categoría | `outputs/clusters/usuarios_por_riesgo.xlsx` |
 
-## Resultados de mi piloto (semilla 42)
+## Resultados (10k usuarios, semilla 42)
 
 | Riesgo | Usuarios | % churn |
 |--------|----------|---------|
-| 0 (bajo) | 712 | ~31% |
-| 1 | 20 | ~95% |
-| 2 | 177 | ~97% |
-| 3 | 83 | 100% |
-| 4 (alto) | 8 | 100% |
+| 0 | 7.222 | 32,1% |
+| 1 | 170 | 85,9% |
+| 2 | 99 | 91,9% |
+| 3 | 1.665 | 96,2% |
+| 4 | 844 | 100% |
 
-La forma me convence: a mayor categoría, mayor churn observado.
+La gradación 0→4 se mantiene. Con 10k hay más usuarios en categorías medias y altas que en el piloto de 1k, lo que facilita leer perfiles con más confianza.
 
-## Preguntas que quiero validar con usted
+## Preguntas abiertas del diseño
 
-1. ¿Le parece bien ordenar los clusters por **% churn** para etiquetar 0–4?
-2. ¿Seguimos sin `user_logs` hasta validar transacciones?
-3. ¿La pregunta principal del seminario queda la de **variables comportamentales vs. riesgo en 5 categorías**?
-4. ¿Próximo hito académico: marco teórico + clasificación multidimensional?
+1. ¿Mantener el orden de riesgo por % de churn observado?
+2. ¿Postergar `user_logs` hasta cerrar el marco con transacciones?
+3. ¿Escalar a 50k–100k o pasar a Fase 2 (red neuronal 5 clases)?
 
-## Después de la reunión (mi plan)
+## Siguiente trabajo
 
-- Completar referencias APA en vacíos de literatura.
-- Escribir narrativa de perfil por categoría en el informe.
-- Escalar muestra si usted lo ve estable.
-- Diseñar Fase 2: red neuronal 5 clases con probabilidades.
+- Referencias APA en vacíos de literatura (clasificación multidimensional).
+- Narrativa de perfiles por categoría en el informe del seminario.
+- Diseño del clasificador con probabilidades por segmento.

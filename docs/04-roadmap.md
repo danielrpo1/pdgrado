@@ -30,7 +30,7 @@ Flujo sugerido: desarrollar en Colab → “Guardar copia en GitHub” / exporta
 | 1.1 | Repo GitHub + estructura | ✅ |
 | 1.2 | Documento contexto + vacíos (borrador) | ✅ borrador |
 | 1.3 | Inventario de variables (`transactions` + `members`) | Notebook 01 |
-| 1.4 | Muestra estratificada 1.000 `msno` | Notebook 01 |
+| 1.4 | Muestra estratificada 10.000 `msno` | Notebook Colab |
 | 1.5 | Feature table numérica + estándar scaler | Notebook 01 |
 | 1.6 | K-Means k=5 + silhouette | Notebook 01 |
 | 1.7 | 5 archivos/hojas Excel por cluster | `outputs/` |

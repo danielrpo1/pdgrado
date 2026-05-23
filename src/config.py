@@ -17,7 +17,7 @@ DATA_FILES = {
 
 REFERENCE_REPO = "https://github.com/apostaremczak/churn-prediction"
 N_CLUSTERS = 5
-PILOT_SAMPLE_SIZE = 1000
+PILOT_SAMPLE_SIZE = 10_000
 RANDOM_STATE = 42
 
 # Columnas numéricas agregadas por usuario (clustering)

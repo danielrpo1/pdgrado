@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Genera el notebook Colab en primera persona (Daniel → profesor)."""
+"""Genera el notebook Colab: tono general, lectura accesible, muestra 10k."""
 import json
 from pathlib import Path
 
@@ -25,37 +25,37 @@ def code(text: str) -> dict:
 def build_cells():
     return [
         md("""
-# Mi piloto de grado: 5 categorías de riesgo en KKBox
+# Piloto KKBox: cinco categorías de riesgo de retiro
 
-**Daniel Restrepo Ospina** — Seminario de Proyecto de Grado, Universidad EAFIT  
+**Daniel Restrepo Ospina** — Proyecto de Grado, Universidad EAFIT  
 **Asesor:** Juan Alejandro Peña Palacio
 
 ---
 
-Profesor, en este cuaderno le cuento **paso a paso** lo que hice en la primera fase del proyecto, después de nuestra asesoría del 8 de abril.
+Este cuaderno documenta la **Fase 1** del proyecto: segmentar usuarios de la plataforma KKBox (streaming musical, Asia) en **cinco niveles de riesgo de retiro**, antes de pasar a un modelo automático más adelante.
 
-Mi objetivo no es predecir solo “¿se va o se queda?”. Lo que busco es **agrupar usuarios en 5 niveles de riesgo de retiro**, parecido a como un banco o una aseguradora segmenta clientes, para después definir **qué hacer con cada grupo** (oferta, llamada comercial, o incluso no contactar — en mi trabajo le decimos *do not poke the bear*).
+La idea central es salir del esquema simple “se va / no se va”. En suscripción y seguros es habitual trabajar con **varios niveles de riesgo** (a menudo cinco), porque cada nivel admite **acciones distintas**: mantener al usuario, ofrecer un beneficio, escalar a retención o, en algunos casos, **evitar contactarlo** si el mensaje empeora la salida (*do not poke the bear*).
 
-**Repositorio del proyecto:** https://github.com/danielrpo1/pdgrado
+**Repositorio:** https://github.com/danielrpo1/pdgrado
 
 ---
 
-### Resumen de lo que hice aquí
+### Resumen de esta corrida
 
-1. Trabajé con datos públicos de **KKBox** (streaming musical en Asia).
-2. Tomé una muestra de **1.000 usuarios**, como acordamos en la reunión.
-3. Construí variables de comportamiento de pago por persona.
-4. Apliqué **K-Means con k = 5** para obtener cinco perfiles.
-5. Revisé si esos grupos tienen sentido mirando el **porcentaje real de churn**.
-6. Exporté un **Excel con cinco hojas**, una por categoría de riesgo.
+1. Datos públicos KKBox (`train`, `members`, `transactions`).
+2. Muestra de **10.000 usuarios** con historial de pagos.
+3. Variables numéricas de comportamiento por usuario.
+4. **K-Means (k = 5)** y reordenamiento por % de churn observado.
+5. Gráficos y lectura de perfiles.
+6. Exportación a **Excel con cinco hojas** (una por categoría).
 
-*Este notebook ya viene ejecutado: abajo están mis resultados y gráficos de la corrida que guardé para la entrega.*
+*Las celdas de abajo ya están ejecutadas: figuras y tablas corresponden a esta corrida (semilla aleatoria 42).*
 """),
         md("""
 ---
-## 1. Cómo preparé el entorno
+## 1. Entorno de trabajo
 
-Cloné mi repositorio en el entorno de trabajo e instalé las librerías que necesitaba. En mi computador ya tenía los datos; si usted abre esto en Colab desde cero, en la siguiente sección explico de dónde los saqué.
+Se clona el repositorio del proyecto y se instalan las dependencias. Los datos pueden estar ya en `data/raw/` o descargarse de Kaggle en una nueva sesión.
 """),
         code("""
 !pip install -q kaggle pyarrow openpyxl scikit-learn seaborn matplotlib
@@ -70,23 +70,21 @@ if IN_COLAB and not Path('pdgrado/src').exists():
 
 ROOT = Path('.').resolve()
 sys.path.insert(0, str(ROOT))
-print('Trabajo desde:', ROOT)
+print('Directorio:', ROOT)
 """),
         md("""
 ---
-## 2. Los datos que usé
+## 2. Datos utilizados
 
-Me basé en la competencia **WSDM – KKBox Churn Prediction** y en la estructura del repositorio de referencia [apostaremczak/churn-prediction](https://github.com/apostaremczak/churn-prediction).
+Fuente: competencia **WSDM – KKBox Churn Prediction**, misma estructura que [apostaremczak/churn-prediction](https://github.com/apostaremczak/churn-prediction). Los archivos se obtuvieron del dataset `qmdo97/kkboxdataset` en Kaggle.
 
-Yo bajé tres archivos (dataset `qmdo97/kkboxdataset` en Kaggle, que trae los mismos CSV):
+| Archivo | Contenido |
+|---------|-----------|
+| `train_v2.csv` | Identificador de usuario y etiqueta `is_churn` |
+| `members_v3.csv` | Perfil (ciudad, género, canal de registro) |
+| `transactions_v2.csv` | Pagos, auto-renew, cancelaciones, montos |
 
-| Archivo | Para qué lo uso |
-|---------|-----------------|
-| `train_v2.csv` | Saber si el usuario hizo churn (`is_churn`) |
-| `members_v3.csv` | Perfil: ciudad, género, canal de registro |
-| `transactions_v2.csv` | Historial de pagos, auto-renew y cancelaciones |
-
-**Decisión mía:** no metí `user_logs` (~30 GB) en este piloto. Mi asesor y yo acordamos empezar por **transacciones**; el engagement lo dejo para una fase posterior.
+En esta fase **no** se incluye `user_logs` (~30 GB). El foco está en **transacciones** y perfil básico; el engagement detallado queda para una etapa posterior.
 """),
         code("""
 from pathlib import Path
@@ -96,9 +94,7 @@ import sys
 DATA_RAW = ROOT / 'data' / 'raw'
 DATA_RAW.mkdir(parents=True, exist_ok=True)
 
-# En la corrida que documento aquí, los CSV ya estaban en data/raw.
-# Si hace falta bajarlos de nuevo (otro entorno), descomento el bloque de abajo.
-BAJAR_DE_KAGGLE = False
+BAJAR_DE_KAGGLE = False  # True solo si hace falta bajar en un entorno nuevo
 
 if BAJAR_DE_KAGGLE:
     token_path = Path.home() / '.kaggle' / 'access_token'
@@ -112,23 +108,22 @@ if BAJAR_DE_KAGGLE:
 
 for f in ['train_v2.csv', 'members_v3.csv', 'transactions_v2.csv']:
     p = DATA_RAW / f
-    tam = f'({p.stat().st_size / 1e6:.0f} MB)' if p.exists() else '(no encontrado)'
-    estado = 'listo' if p.exists() else 'falta'
-    print(f'  [{estado}] {f} {tam}')
+    print(('OK' if p.exists() else 'FALTA'), f, f'({p.stat().st_size/1e6:.0f} MB)' if p.exists() else '')
 """),
         md("""
 ---
-## 3. Qué problema estoy atacando (y por qué no es un sí/no)
+## 3. Problema y enfoque
 
-En la industria de suscripciones muchos modelos dicen: churn = 0 o 1. En mi trabajo eso no alcanza: necesito **priorizar** y **no molestar** a quien se activa con un correo promocional.
+Muchos modelos de churn devuelven solo probabilidad de salida (0/1). Eso sirve para un ranking, pero **no arma perfiles** ni facilita reglas del tipo “en riesgo 4 hacemos X, en riesgo 0 casi nada”.
 
-Por eso adopté el enfoque que usted me sugirió:
+Por eso el flujo de este proyecto es:
 
-- Primero **segmentar en 5 categorías de riesgo** con clustering.
-- **Caracterizar** cada categoría (qué pagos hace, cuánto cancela, etc.).
-- Después, en la Fase 2, montar un modelo neuronal que asigne categoría con probabilidades.
+1. **Clustering** en cinco grupos con variables de pago.
+2. **Validación** con el churn real de la base (`is_churn`).
+3. **Caracterización** con variables categóricas.
+4. Más adelante: clasificador (p. ej. red neuronal) que prediga categoría con probabilidades.
 
-Hablamos de **prospectiva de riesgo**, no solo de “predicción exacta” de quién se va mañana.
+Se habla de **prospectiva de riesgo**: varias categorías con distinta tasa de salida, no una sola etiqueta binaria.
 """),
         code("""
 %matplotlib inline
@@ -145,25 +140,20 @@ transactions = load_transactions(DATA_RAW)
 
 print('Usuarios en train:', f'{len(train):,}')
 print('Perfiles en members:', f'{members.shape[0]:,}')
-print('Filas de pagos en transactions:', f'{len(transactions):,}')
-print()
-print('Churn en toda la base train:', f'{train["is_churn"].mean():.1%}')
-print('(Hay muchos más que renuevan que los que se van — base desbalanceada)')
+print('Filas en transactions:', f'{len(transactions):,}')
+print('Churn global en train:', f'{train["is_churn"].mean():.1%}')
 
 display(train.head(3))
 display(transactions.head(3))
 """),
         md("""
-### Lo que entendí al explorar los datos
+### Lectura rápida del EDA
 
-- **`is_churn = 1`**: la persona **no renovó** dentro de los 30 días después de vencer la membresía.
-- **`is_cancel`**: canceló el plan en esa transacción; en mi experiencia laboral es una señal fuerte, aunque no siempre es churn inmediato.
-- **`is_auto_renew`**: si dejó el cobro automático; cuando lo apagan, muchas veces ya viene la salida.
+- **`is_churn = 1`**: no renovó dentro de los 30 días posteriores al vencimiento de la membresía.
+- **`is_cancel`**: cancelación activa en esa transacción (señal fuerte, aunque no siempre implica churn inmediato).
+- **`is_auto_renew`**: cobro automático; cuando cae, suele anticipar problemas de retención.
 
-Separé variables así, como me indicó en la asesoría:
-
-- **Numéricas** (montos, días, conteos) → entran al K-Means.
-- **Categóricas** (ciudad, género) → solo para **describir** cada grupo al final.
+**Regla de modelado en esta fase:** numéricas → clustering; categóricas → describir grupos al final.
 """),
         code("""
 sns.set_theme(style='whitegrid', palette='muted')
@@ -171,26 +161,33 @@ fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
 vc = train['is_churn'].value_counts().sort_index()
 ax[0].bar(['Renueva (0)', 'Churn (1)'], vc.values, color=['#27ae60', '#c0392b'])
-ax[0].set_title('Así se ve el desbalance en train_v2')
-ax[0].set_ylabel('Cantidad de usuarios')
+ax[0].set_title('Distribución de etiquetas en train_v2')
+ax[0].set_ylabel('Usuarios')
 
 ax[1].pie(vc.values, labels=['Renueva', 'Churn'], autopct='%1.1f%%', colors=['#27ae60', '#c0392b'])
 ax[1].set_title('Proporción global')
 
-plt.suptitle('Figura 1 — Por qué un modelo que solo acierta "no churn" no me sirve', y=1.02)
+plt.suptitle('Figura 1 — Base desbalanceada (pocos churners)', y=1.02)
 plt.tight_layout()
 plt.show()
 """),
         md("""
 ---
-## 4. Mi muestra de 1.000 usuarios
+## 4. Muestra de 10.000 usuarios
 
-Acordé con usted no quemar tiempo con los ~900 mil usuarios al inicio. Por eso tomé **1.000 personas** que tengan datos en train y en transactions, y las muestreé **estratificadas** por `is_churn` para no perder casos de gente que sí se fue.
+El piloto inicial usó 1.000 usuarios para validar el pipeline. Aquí se **amplía a 10.000** para perfiles más estables y tasas de churn por categoría con menos ruido.
+
+Criterios de la muestra:
+
+- Usuario presente en `train` y en `transactions`.
+- Muestreo **estratificado** por `is_churn` (semilla 42) para no perder casos de salida.
 """),
         code("""
 from src.config import PILOT_SAMPLE_SIZE, RANDOM_STATE, CLUSTER_FEATURE_COLS
 from src.data_io import sample_users
 from src.features import build_user_features, attach_profile_for_characterization
+
+print('Tamaño configurado del piloto:', PILOT_SAMPLE_SIZE)
 
 train_con_tx = train[train['msno'].isin(transactions['msno'].unique())]
 muestra = sample_users(train_con_tx, PILOT_SAMPLE_SIZE, RANDOM_STATE)
@@ -198,39 +195,33 @@ muestra = sample_users(train_con_tx, PILOT_SAMPLE_SIZE, RANDOM_STATE)
 tx_m = transactions[transactions['msno'].isin(muestra)]
 mem_m = members[members['msno'].isin(muestra)]
 
-print('Usuarios en mi piloto:', muestra.nunique())
-print('Transacciones de esos usuarios:', len(tx_m))
+print('Usuarios en la muestra:', muestra.nunique())
+print('Transacciones asociadas:', f'{len(tx_m):,}')
 
 features = build_user_features(tx_m, members=mem_m)
 df = attach_profile_for_characterization(features, mem_m, train)
 
 cols_cluster = [c for c in CLUSTER_FEATURE_COLS if c in df.columns]
-print()
-print('Variables que usé para agrupar (todas numéricas):')
-for c in cols_cluster:
-    print(' -', c)
-
+print('Variables para clustering:', len(cols_cluster))
 df[['msno', 'is_churn'] + cols_cluster[:4]].head()
 """),
         md("""
-### Cómo leo yo cada variable (sin tecnicismos)
+### Variables construidas (lenguaje llano)
 
-| Variable | Qué significa para mí |
-|----------|------------------------|
-| `transaction_count` | Cuántas veces pagó |
-| `cancel_count` | Cuántas cancelaciones acumuló |
-| `auto_renew_ratio` | Qué tan seguido mantuvo el cobro automático |
-| `amount_paid_ntd_sum` | Cuánto pagó en total |
-| `days_active_span` | Cuántos días lleva en la ventana de pagos |
-| `discount_mean` | En promedio, cuánto descuento recibió |
+| Variable | Interpretación |
+|----------|----------------|
+| `transaction_count` | Número de pagos registrados |
+| `cancel_count` | Cancelaciones acumuladas |
+| `auto_renew_ratio` | Frecuencia de cobro automático |
+| `amount_paid_ntd_sum` | Monto total pagado |
+| `days_active_span` | Días entre primer y último pago en la ventana |
+| `discount_mean` | Descuento medio (precio lista − pagado) |
 """),
         md("""
 ---
-## 5. Clustering: mis cinco categorías de riesgo
+## 5. Clustering: cinco categorías de riesgo
 
-Usé **K-Means con k = 5** porque usted me dijo que es rápido y suficiente para este paneo inicial. También lo vimos en la maestría.
-
-**Importante:** K-Means me devuelve grupos 0–4 sin orden de riesgo. Yo los **reordené** del menor al mayor % de churn observado y les puse etiqueta **riesgo 0 (bajo) … riesgo 4 (alto)**.
+Se aplica **K-Means con k = 5** sobre las variables numéricas escaladas. Los grupos que devuelve el algoritmo no vienen ordenados por riesgo: se **reordenan** según el % medio de `is_churn` y se etiquetan de **0 (menor riesgo)** a **4 (mayor riesgo)**.
 """),
         code("""
 from sklearn.metrics import silhouette_score
@@ -241,8 +232,7 @@ modelo, escalador, etiquetas = fit_kmeans(X)
 df['grupo_kmeans'] = etiquetas.values
 
 sil = silhouette_score(escalador.transform(X), etiquetas)
-print(f'Silhouette de mi corrida: {sil:.3f}')
-print('(Lo uso como referencia; lo central para mí es si el churn sube por categoría)')
+print(f'Silhouette: {sil:.3f}')
 
 mapa_riesgo = order_clusters_by_risk(df, cluster_col='grupo_kmeans')
 df['categoria_riesgo'] = df['grupo_kmeans'].map(mapa_riesgo)
@@ -257,41 +247,34 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 colores = plt.cm.RdYlGn_r(np.linspace(0.15, 0.85, 5))
 
 axes[0].bar(resumen.index.astype(str), resumen['churn_%'], color=colores, edgecolor='white')
-axes[0].set_xlabel('Categoría de riesgo (0 = bajo, 4 = alto)')
-axes[0].set_ylabel('% churn observado en el piloto')
-axes[0].set_title('Figura 2 — ¿Los grupos separan riesgo real?')
-for i, v in enumerate(resumen['churn_%']):
-    axes[0].text(i, v + 2, f'{v:.0f}%', ha='center')
+axes[0].set_xlabel('Categoría 0 (bajo) → 4 (alto)')
+axes[0].set_ylabel('% churn en la muestra')
+axes[0].set_title('Figura 2 — Riesgo observado por categoría')
 
 axes[1].bar(resumen.index.astype(str), resumen['n_users'], color=colores, edgecolor='white')
 axes[1].set_xlabel('Categoría de riesgo')
-axes[1].set_ylabel('Usuarios en el piloto')
-axes[1].set_title('Figura 3 — Tamaño de cada grupo')
+axes[1].set_ylabel('Número de usuarios')
+axes[1].set_title('Figura 3 — Tamaño de cada segmento')
 
-plt.suptitle('Resultados de mi piloto (1.000 usuarios, semilla 42)', fontsize=13, y=1.02)
+plt.suptitle(f'Piloto con {len(df):,} usuarios (semilla {RANDOM_STATE})', fontsize=13, y=1.02)
 plt.tight_layout()
 plt.show()
 """),
         md("""
 ---
-## 6. Cómo interpreto lo que me salió (para la reunión)
+## 6. Interpretación de resultados
 
-Los números exactos pueden variar levemente si cambio la semilla, pero **la forma** de la historia me parece clara:
+La tabla y las figuras anteriores son la evidencia principal. En términos generales:
 
-### Categoría 0 — Riesgo bajo
-Es el grupo **más grande**. El churn aquí es **mucho menor** que en el resto.  
-**En mi trabajo** estos son los que casi no tocaría con promos agresivas.
+**Categoría 0** — Suele concentrar la mayor parte de la muestra y el **menor churn**. Perfil típico de base estable; conviene gastar poco en promociones agresivas.
 
-### Categorías 1 y 2 — Riesgo medio y alto
-El churn sube fuerte. Veo más cancelaciones y peor comportamiento de auto-renew en los gráficos de abajo.  
-**Acción que planteo:** ofertas medidas, contenido exclusivo, revisar precio.
+**Categorías 1 y 2** — El churn sube de forma clara respecto al grupo 0. Aparecen más cancelaciones y peor comportamiento de auto-renew en los gráficos siguientes. Son candidatos a **retención selectiva** (ofertas, contenido, revisión de plan).
 
-### Categorías 3 y 4 — Riesgo muy alto
-Casi todos los usuarios de estos grupos **sí hicieron churn** en el mes que mide la base. Son grupos más pequeños: perfiles **extremos**.  
-**Acción que planteo:** retención prioritaria o, en algunos casos, **no contactar** para no activar la baja (lo que vivimos con *do not poke*).
+**Categorías 3 y 4** — Tasas de churn muy altas (a menudo cercanas al 100% en esta ventana temporal). Grupos más pequeños pero con comportamiento extremo. Ahí tiene sentido priorizar acciones fuertes de retención o, según la política del negocio, **reducir contactos** que disparen la cancelación.
 
-### ¿Cumple lo que acordamos con mi asesor?
-Sí: tengo **cinco segmentos**, puedo abrir el Excel hoja por hoja, y puedo explicar el perfil antes de pasar a la red neuronal.
+Con **10.000 usuarios** los segmentos medios (1 y 2) suelen ser más grandes que en el piloto de 1.000, lo que da más confianza al comparar porcentajes.
+
+> Los valores exactos dependen de la semilla y del tamaño de muestra; lo relevante es la **gradación** de riesgo de 0 a 4.
 """),
         code("""
 perfil = df.groupby('categoria_riesgo')[cols_cluster].mean()
@@ -315,28 +298,28 @@ for ax, col, titulo in zip(
     sns.boxplot(data=df, x='categoria_riesgo', y=col, ax=ax, palette='RdYlGn_r')
     ax.set_title(titulo)
     ax.set_xlabel('Riesgo')
-plt.suptitle('Figura 5 — Diferencias que veo entre categorías', y=1.02)
+plt.suptitle('Figura 5 — Dispersión por categoría', y=1.02)
 plt.tight_layout()
 plt.show()
 """),
         code("""
-print('Perfil cualitativo que anoto para el informe:\\n')
+print('Resumen cualitativo por categoría:\\n')
 for cat in sorted(df['categoria_riesgo'].unique()):
     sub = df[df['categoria_riesgo'] == cat]
-    print(f'--- Riesgo {int(cat)} | {len(sub)} usuarios | churn {sub["is_churn"].mean():.1%} ---')
+    print(f'--- Riesgo {int(cat)} | n={len(sub):,} | churn {sub["is_churn"].mean():.1%} ---')
     if 'city' in sub.columns:
         print('  Ciudades frecuentes:', sub['city'].value_counts().head(3).to_dict())
     if 'gender' in sub.columns:
-        print('  Género:', sub['gender'].value_counts().to_dict())
+        print('  Género:', sub['gender'].value_counts().head(3).to_dict())
     m = sub[['transaction_count', 'cancel_count', 'auto_renew_ratio']].mean()
-    print(f'  Promedio pagos: {m["transaction_count"]:.1f} | cancelaciones: {m["cancel_count"]:.1f} | auto-renew: {m["auto_renew_ratio"]:.2f}')
+    print(f'  Prom. pagos: {m["transaction_count"]:.1f} | cancel.: {m["cancel_count"]:.1f} | auto-renew: {m["auto_renew_ratio"]:.2f}')
     print()
 """),
         md("""
 ---
-## 7. Excel que exporté (cinco hojas)
+## 7. Exportación a Excel
 
-Generé un archivo con **una hoja por categoría de riesgo** para revisarlo en Excel, como me sugirió en la asesoría cuando hablamos del ejemplo de los estudiantes de Integración de datos.
+Se genera un libro con **cinco hojas** (`riesgo_0` … `riesgo_4`) para revisar usuarios por segmento fuera de Python.
 """),
         code("""
 from src.clustering import export_clusters_to_excel
@@ -346,7 +329,7 @@ ruta_excel = export_clusters_to_excel(
     df.rename(columns={'categoria_riesgo': 'risk_category'}),
     salida,
 )
-print('Guardé el archivo en:', ruta_excel)
+print('Archivo:', ruta_excel)
 
 if 'google.colab' in sys.modules:
     from google.colab import files
@@ -354,27 +337,24 @@ if 'google.colab' in sys.modules:
 """),
         md("""
 ---
-## 8. Cierre: qué le presento al profesor y qué sigue
+## 8. Conclusiones y siguientes pasos
 
-### Lo que ya tengo listo
-- Datos KKBox integrados (`train`, `members`, `transactions`).
-- Piloto de **1.000 usuarios** con **5 categorías de riesgo**.
-- Gráficos que muestran que el riesgo **sube** de la categoría 0 a la 4.
-- Excel con cinco hojas para revisar casos.
+### Hallazgos de esta fase
+- Pipeline reproducible con datos KKBox y muestra ampliable (1k → **10k**).
+- Cinco categorías con **gradación clara** de churn en la muestra analizada.
+- Material listo para informe: gráficos, tabla resumen y Excel por segmento.
 
-### Lo que viene en la Fase 2
-- Completar vacíos de literatura en **clasificación multidimensional**.
-- Escalar la muestra si usted ve que los perfiles son estables.
-- Entrenar la **red neuronal** que asigne categoría con probabilidades.
+### Próximos pasos
+- Completar marco teórico (clasificación multidimensional vs. modelos binarios).
+- Evaluar si conviene escalar aún más (50k–100k) o enriquecer con agregados de `user_logs`.
+- Fase 2: clasificador automático (5 clases + probabilidades por categoría).
 
-### Documentos del seminario en GitHub
-- `docs/01-contexto.md`
-- `docs/02-vacios-literatura.md`
-- `docs/03-preguntas-investigacion.md`
+### Documentación en el repositorio
+- `docs/01-contexto.md`, `docs/02-vacios-literatura.md`, `docs/03-preguntas-investigacion.md`
 
 ---
 
-*Daniel Restrepo Ospina — Universidad EAFIT*
+*Universidad EAFIT — Daniel Restrepo Ospina*
 """),
     ]
 
