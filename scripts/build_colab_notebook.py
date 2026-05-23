@@ -27,29 +27,78 @@ def build_cells():
         md("""
 # Piloto KKBox: cinco categorías de riesgo de retiro
 
-**Daniel Restrepo Ospina** — Proyecto de Grado, Universidad EAFIT  
-**Asesor:** Juan Alejandro Peña Palacio
+**Daniel Restrepo Ospina** · Proyecto de Grado, Universidad EAFIT  
+**Asesor:** Juan Alejandro Peña Palacio · [Repositorio](https://github.com/danielrpo1/pdgrado)
 
 ---
 
-Este cuaderno documenta la **Fase 1** del proyecto: segmentar usuarios de la plataforma KKBox (streaming musical, Asia) en **cinco niveles de riesgo de retiro**, antes de pasar a un modelo automático más adelante.
+## Resumen ejecutivo — Fase 1
 
-La idea central es salir del esquema simple “se va / no se va”. En suscripción y seguros es habitual trabajar con **varios niveles de riesgo** (a menudo cinco), porque cada nivel admite **acciones distintas**: mantener al usuario, ofrecer un beneficio, escalar a retención o, en algunos casos, **evitar contactarlo** si el mensaje empeora la salida (*do not poke the bear*).
+### En una frase
 
-**Repositorio:** https://github.com/danielrpo1/pdgrado
+Se agruparon **10.000 suscriptores** de KKBox en **cinco niveles de riesgo de salida**, usando su historial de pagos, y se comprobó que **cuanto más alto el nivel, más gente realmente se fue** en los datos históricos.
 
 ---
 
-### Resumen de esta corrida
+### Qué se hizo en esta etapa
 
-1. Datos públicos KKBox (`train`, `members`, `transactions`).
-2. Muestra de **10.000 usuarios** con historial de pagos.
-3. Variables numéricas de comportamiento por usuario.
-4. **K-Means (k = 5)** y reordenamiento por % de churn observado.
-5. Gráficos y lectura de perfiles.
-6. Exportación a **Excel con cinco hojas** (una por categoría).
+| | |
+|---|---|
+| **Datos** | Plataforma de streaming KKBox (Asia): quién pagó, quién canceló, perfil básico |
+| **Tamaño** | 10.000 usuarios con transacciones (piloto ampliable) |
+| **Método** | Cinco grupos automáticos (K-Means) ordenados de menor a mayor riesgo |
+| **Validación** | Se contrastó cada grupo con la etiqueta real: ¿renovó o no la membresía? |
+| **Extra** | Análisis de perfiles (lift, variables clave, reglas simples) + Excel por grupo |
 
-*Las celdas de abajo ya están ejecutadas: figuras y tablas corresponden a esta corrida (semilla aleatoria 42).*
+No se usó todavía red neuronal: primero hay que **entender** los cinco mundos de usuarios; la predicción automática es la Fase 2.
+
+---
+
+### Lo más importante que apareció
+
+**1. Los cinco niveles sí cuentan historias distintas**
+
+| Nivel | Perfil corto | Usuarios (muestra) | De ese grupo, ¿cuántos se fueron? |
+|:-----:|--------------|-------------------:|------------------------------------:|
+| **0** | Base más estable | ~7.200 (72%) | ~**1 de cada 3** |
+| **1** | Riesgo alto | ~170 | ~**9 de cada 10** |
+| **2** | Riesgo muy alto | ~100 | ~**9 de cada 10** |
+| **3** | Crítico | ~1.700 | ~**19 de cada 20** |
+| **4** | Salida casi total | ~840 | **Todos** en esta ventana |
+
+La lectura no es “adivinar un sí/no”, sino **priorizar**: la mayoría cae en riesgo bajo; el problema concentrado está en los niveles 3 y 4.
+
+**2. El riesgo “explota” al subir de nivel**  
+El grupo 0 se comporta como ancla. A partir del nivel 1, la tasa de salida se dispara (más del doble o triple en términos relativos). Eso respalda usar **cinco bandas** en lugar de una sola alerta de churn.
+
+**3. Las señales que más separan grupos**  
+En el análisis profundo (sección 7) destacan variables de **comportamiento de pago**, no solo demografía:
+
+- Cuántas veces **canceló** el plan  
+- Si mantuvo el **cobro automático**  
+- Cuántos **pagos** lleva y cuánto tiempo activo  
+- Descuentos y montos pagados  
+
+Perfil de ciudad o género ayuda a **describir** grupos, pero el núcleo del riesgo está en **cómo paga y cómo deja de pagar**.
+
+**4. Implicación para retención (streaming / suscripción)**  
+
+| Nivel | Idea de acción |
+|:-----:|----------------|
+| **0** | Cuidado liviano; no saturar con promos |
+| **1 – 2** | Retención selectiva (beneficio, contenido, revisar plan) |
+| **3 – 4** | Prioridad alta; a veces **menos contacto** si el mensaje activa la baja |
+
+**5. Qué falta y qué sigue**  
+Esta fase no incluye aún escucha diaria (`user_logs`, archivos muy pesados). La Fase 2 montará un modelo que **asigne** nivel de riesgo con probabilidades, usando lo aprendido aquí.
+
+---
+
+### Cómo leer este cuaderno
+
+Las celdas siguientes están **ya ejecutadas** (semilla 42): datos, gráficos, tablas y figuras 1–9. El detalle técnico está paso a paso; este resumen es la **portada** de la Fase 1.
+
+> *Nota:* La muestra se estratificó para estudiar bien tanto renovaciones como salidas; por eso el % global de churn en la muestra no coincide con el de toda la plataforma. Lo que importa es la **diferencia entre niveles 0 → 4**.
 """),
         md("""
 ---
