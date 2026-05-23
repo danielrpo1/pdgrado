@@ -1,15 +1,10 @@
 # Qué necesito de ti para seguir
 
-## Bloqueante (sin esto no corre el piloto)
+## Datos
 
-1. **Los 3 CSV** en `pdgrado/data/raw/`:
-   - `train_v2.csv`
-   - `members_v3.csv`
-   - `transactions_v2.csv`
+Los CSV ya se descargan con `bash scripts/download_data.sh` (dataset `qmdo97/kkboxdataset`).
 
-   **Cómo obtenerlos:** [`docs/DATA_SETUP.md`](DATA_SETUP.md) (Kaggle API o copia desde tu carpeta del repo apostaremczak).
-
-2. **Opcional Kaggle:** `~/.kaggle/kaggle.json` si usas `scripts/download_data.sh`.
+En tu máquina deben quedar en `data/raw/` (~560 MB descomprimido).
 
 ## Ya está hecho en el repo
 
