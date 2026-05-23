@@ -28,77 +28,101 @@ def build_cells():
 # Piloto KKBox: cinco categorías de riesgo de retiro
 
 **Daniel Restrepo Ospina** · Proyecto de Grado, Universidad EAFIT  
-**Asesor:** Juan Alejandro Peña Palacio · [Repositorio](https://github.com/danielrpo1/pdgrado)
+**Asesor:** Juan Alejandro Peña Palacio · [Repositorio GitHub](https://github.com/danielrpo1/pdgrado)
+
+> **Versión del cuaderno:** Fase 1 con muestra de **10.000 usuarios** y resumen ejecutivo al inicio.  
+> Si en Colab aún aparece la introducción antigua con viñetas simples: menú **Archivo → Abrir cuaderno → pestaña GitHub** y abrir de nuevo `Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` desde `danielrpo1/pdgrado` (rama `main`).
+"""),
+        md("""
+<div style="background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 55%, #0d9488 120%); color: #f8fafc; padding: 28px 32px; border-radius: 16px; line-height: 1.65; font-family: system-ui, -apple-system, sans-serif; margin: 8px 0 24px 0;">
+
+<h2 style="margin: 0 0 8px 0; font-size: 1.5rem; letter-spacing: -0.02em;">Resumen ejecutivo · Fase 1</h2>
+<p style="margin: 0 0 20px 0; opacity: 0.9; font-size: 1.05rem;"><em>De “¿se va mañana?” a “¿en qué banda de riesgo está y qué hacemos con eso?”</em></p>
+
+<p style="margin: 0 0 14px 0;">En una plataforma de suscripción, la pregunta útil no siempre es binaria. No es solo <strong>¿se queda o se va?</strong> — es <strong>qué tan cerca está de irse</strong> y si conviene intervenir, premiar o incluso <strong>no tocarlo</strong> porque un mensaje promocional le recuerda la cuota y acelera la salida.</p>
+
+<p style="margin: 0 0 14px 0;">En esta primera etapa tomé datos reales de <strong>KKBox</strong> (streaming en Asia): pagos, cancelaciones, renovaciones y perfil básico de <strong>10.000 usuarios</strong>. No para predecir aún con inteligencia artificial, sino para <strong>descubrir cinco perfiles de riesgo</strong> — la misma lógica que usan banca y seguros cuando hablan de “cinco categorías de riesgo”, no de un solo semáforo rojo/verde.</p>
+
+<p style="margin: 0 0 14px 0;">El método agrupa comportamientos parecidos y luego ordena esos grupos de menor a mayor salida real. La pregunta que guió todo fue: <strong>¿estos cinco mundos se comportan distinto en la vida real?</strong> La respuesta corta: <strong>sí</strong>.</p>
+
+</div>
+"""),
+        md("""
+### La historia que cuentan los datos
+
+Imagina la base de suscriptores como un país con **cinco regiones de clima**:
+
+**Región 0 — la llanura tranquila (≈ 7 de cada 10 usuarios en la muestra)**  
+Aquí vive la mayoría. Aun así, **alrededor de uno de cada tres** terminó yéndose en el periodo observado: no es cero riesgo, pero es el lugar donde tiene sentido **no gastar agresivamente** en cupones para todos.
+
+**Regiones 1 y 2 — la niebla que sube (≈ 270 personas, pocas pero claras)**  
+Son segmentos chicos, casi **laboratorio de alerta temprana**: en torno a **nueve de cada diez** ya se fueron. Pocos en volumen, pero útiles para entender **qué cambia** justo antes de la salida fuerte.
+
+**Región 3 — la tormenta (≈ 1.700 personas)**  
+Aquí el riesgo ya no es “tal vez”: **casi todos** en el grupo tienen churn en los datos. Es donde una estrategia de retención tiene que ser **seria y rápida**.
+
+**Región 4 — el punto de no retorno (≈ 840 personas)**  
+En esta corrida, **el 100%** del segmento ya había salido en la ventana analizada. No es el grupo donde tiene sentido una promo suave; es evidencia de un **perfil terminal** en ese mes histórico.
 
 ---
 
-## Resumen ejecutivo — Fase 1
+### El hallazgo que vale la pena llevarse
 
-### En una frase
+No se trata de un modelo que adivina un sí o un no. Se trata de un **mapa de calor humano**:
 
-Se agruparon **10.000 suscriptores** de KKBox en **cinco niveles de riesgo de salida**, usando su historial de pagos, y se comprobó que **cuanto más alto el nivel, más gente realmente se fue** en los datos históricos.
+- **Abajo (0):** volumen masivo, riesgo moderado → eficiencia operativa.  
+- **Arriba (3–4):** menos gente, pero el daño ya ocurrió → foco y priorización.  
+- **En el medio (1–2):** transición → ahí viven las señales que más importan vigilar.
 
----
-
-### Qué se hizo en esta etapa
-
-| | |
-|---|---|
-| **Datos** | Plataforma de streaming KKBox (Asia): quién pagó, quién canceló, perfil básico |
-| **Tamaño** | 10.000 usuarios con transacciones (piloto ampliable) |
-| **Método** | Cinco grupos automáticos (K-Means) ordenados de menor a mayor riesgo |
-| **Validación** | Se contrastó cada grupo con la etiqueta real: ¿renovó o no la membresía? |
-| **Extra** | Análisis de perfiles (lift, variables clave, reglas simples) + Excel por grupo |
-
-No se usó todavía red neuronal: primero hay que **entender** los cinco mundos de usuarios; la predicción automática es la Fase 2.
+Cuando miramos *qué* separa esos mundos, la historia deja de ser “de qué ciudad es” y pasa a ser **cómo paga**: cancelaciones, si mantiene el cobro automático, cuántos pagos lleva, cuánto tiempo lleva activo. La demografía ayuda a **contar** el perfil; el **comportamiento de pago** es el protagonista.
 
 ---
 
-### Lo más importante que apareció
+### Qué cambia en la práctica
 
-**1. Los cinco niveles sí cuentan historias distintas**
+| Si el usuario cae en… | La lectura de negocio |
+|----------------------|------------------------|
+| **Riesgo 0** | Base estable: cuidado liviano, sin saturar de mensajes |
+| **Riesgo 1 – 2** | Calentamiento: retención selectiva (beneficio, contenido, plan) |
+| **Riesgo 3 – 4** | Urgencia: equipo de retención o, según la política, **silencio** para no empeorar |
 
-| Nivel | Perfil corto | Usuarios (muestra) | De ese grupo, ¿cuántos se fueron? |
-|:-----:|--------------|-------------------:|------------------------------------:|
-| **0** | Base más estable | ~7.200 (72%) | ~**1 de cada 3** |
-| **1** | Riesgo alto | ~170 | ~**9 de cada 10** |
-| **2** | Riesgo muy alto | ~100 | ~**9 de cada 10** |
-| **3** | Crítico | ~1.700 | ~**19 de cada 20** |
-| **4** | Salida casi total | ~840 | **Todos** en esta ventana |
-
-La lectura no es “adivinar un sí/no”, sino **priorizar**: la mayoría cae en riesgo bajo; el problema concentrado está en los niveles 3 y 4.
-
-**2. El riesgo “explota” al subir de nivel**  
-El grupo 0 se comporta como ancla. A partir del nivel 1, la tasa de salida se dispara (más del doble o triple en términos relativos). Eso respalda usar **cinco bandas** en lugar de una sola alerta de churn.
-
-**3. Las señales que más separan grupos**  
-En el análisis profundo (sección 7) destacan variables de **comportamiento de pago**, no solo demografía:
-
-- Cuántas veces **canceló** el plan  
-- Si mantuvo el **cobro automático**  
-- Cuántos **pagos** lleva y cuánto tiempo activo  
-- Descuentos y montos pagados  
-
-Perfil de ciudad o género ayuda a **describir** grupos, pero el núcleo del riesgo está en **cómo paga y cómo deja de pagar**.
-
-**4. Implicación para retención (streaming / suscripción)**  
-
-| Nivel | Idea de acción |
-|:-----:|----------------|
-| **0** | Cuidado liviano; no saturar con promos |
-| **1 – 2** | Retención selectiva (beneficio, contenido, revisar plan) |
-| **3 – 4** | Prioridad alta; a veces **menos contacto** si el mensaje activa la baja |
-
-**5. Qué falta y qué sigue**  
-Esta fase no incluye aún escucha diaria (`user_logs`, archivos muy pesados). La Fase 2 montará un modelo que **asigne** nivel de riesgo con probabilidades, usando lo aprendido aquí.
+Eso conecta directo con ideas como *do not poke the bear*: a veces el mejor movimiento es **no recordarle la suscripción**.
 
 ---
 
-### Cómo leer este cuaderno
+### Qué viene después de esta etapa
 
-Las celdas siguientes están **ya ejecutadas** (semilla 42): datos, gráficos, tablas y figuras 1–9. El detalle técnico está paso a paso; este resumen es la **portada** de la Fase 1.
+Aquí **no** está todavía la red neuronal ni el uso masivo de logs de escucha (archivos enormes). Eso es la **Fase 2**: un sistema que asigne nivel con probabilidades, apoyado en lo que ya aprendimos de estos cinco perfiles.
 
-> *Nota:* La muestra se estratificó para estudiar bien tanto renovaciones como salidas; por eso el % global de churn en la muestra no coincide con el de toda la plataforma. Lo que importa es la **diferencia entre niveles 0 → 4**.
+**Abajo en el cuaderno** está la evidencia: gráficos, pruebas de perfiles, reglas simples y tablas. Esta página es la **portada narrativa**; el detalle técnico viene en las secciones 1 a 9.
+
+*Nota sobre la muestra: se estratificó para estudiar bien renovaciones y salidas; lo que importa es la **brecha entre el nivel 0 y el 4**, no el porcentaje global de la muestra.*
+"""),
+        code("""
+# Resumen visual (se actualiza al ejecutar el cuaderno completo)
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Valores de la corrida documentada (semilla 42, n=10_000)
+cats = ['0\\n(bajo)', '1', '2', '3', '4\\n(alto)']
+n_users = [7222, 170, 99, 1665, 844]
+churn_pct = [32.1, 85.9, 91.9, 96.2, 100.0]
+colors = plt.cm.RdYlGn_r(np.linspace(0.2, 0.9, 5))
+
+fig, ax = plt.subplots(figsize=(11, 4.2))
+fig.patch.set_facecolor('#f8fafc')
+bars = ax.bar(cats, churn_pct, color=colors, edgecolor='white', linewidth=1.2)
+ax.set_ylabel('% que se fue (churn en el periodo)', fontsize=11)
+ax.set_title('Resumen visual · Fase 1: a mayor categoría, mayor salida observada', fontsize=13, pad=14, fontweight='bold')
+ax.set_ylim(0, 110)
+for b, v, n in zip(bars, churn_pct, n_users):
+    ax.text(b.get_x() + b.get_width()/2, v + 2, f'{v:.0f}%\\n(n={n:,})', ha='center', fontsize=9)
+ax.axhline(50, color='#64748b', linestyle='--', alpha=0.5, label='Promedio muestra (estr.)')
+ax.legend(loc='upper left', frameon=False)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+plt.tight_layout()
+plt.show()
 """),
         md("""
 ---
