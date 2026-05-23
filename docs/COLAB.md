@@ -1,24 +1,22 @@
-# Cómo abrir el notebook en Google Colab
+# Mi notebook en Google Colab
 
-## Enlace directo
+Profesor, dejé el piloto documentado aquí:
 
-https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb
+**https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb**
 
-## Antes de ejecutar
+## Qué va a ver al abrirlo
 
-1. En Kaggle → [Settings](https://www.kaggle.com/settings) → **Create New Token**
-2. En Colab → panel **Secrets** (🔑) → nombre `KAGGLE_API_TOKEN` → pegar el token
-3. **Runtime → Run all**
+El archivo en GitHub **ya trae ejecutadas** las celdas de mi corrida: tablas, gráficos de churn por categoría, heatmap de perfiles y el texto donde explico cómo leo cada grupo de riesgo.
 
-## Si no quieres usar Kaggle en Colab
+No necesita correr nada para revisar los resultados. Si quiere repetir el análisis en Colab, puede usar **Runtime → Run all** (en ese caso hace falta token de Kaggle o subir los CSV a Drive; en el notebook dejo una nota breve al respecto).
 
-Sube los 3 CSV a Google Drive en `MyDrive/pdgrado/data/raw/` y en el notebook activa la **Opción B** (comentada en el Paso 1).
+## Contenido del cuaderno
 
-## Qué contiene el notebook
+- Por qué elegí 5 categorías de riesgo y no un modelo binario
+- Cómo cargué los datos de KKBox
+- Muestra de 1.000 usuarios
+- K-Means y ordenamiento de riesgo 0 (bajo) a 4 (alto)
+- Mis interpretaciones para retención en streaming
+- Exportación del Excel con cinco hojas
 
-- Contexto del proyecto de grado (5 categorías de riesgo)
-- Descarga de datos
-- EDA con gráficos
-- K-Means y validación con % churn
-- Interpretación en lenguaje sencillo
-- Exportación del Excel con 5 hojas
+— Daniel Restrepo Ospina

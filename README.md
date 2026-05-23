@@ -4,73 +4,67 @@
 **Asesor:** Juan Alejandro Peña Palacio  
 **Estudiante:** Daniel Restrepo Ospina
 
-## Resumen
+## De qué trata mi proyecto
 
-Segmentación multidimensional de usuarios de una plataforma de streaming (dataset KKBox) en **5 categorías de riesgo de retiro**, alineado con estándares de gestión de riesgo (aseguradoras, DataCrédito, banca). El proyecto evita la clasificación binaria (sí/no churn) y prioriza **prospectiva de riesgos** con perfiles accionables por categoría.
+Estoy desarrollando un marco para segmentar usuarios de una plataforma de streaming (dataset **KKBox**) en **cinco categorías de riesgo de retiro**, en línea con lo que conversé con mi asesor: no me interesa solo un modelo sí/no de churn, sino **perfiles de riesgo accionables** (como en aseguradoras o DataCrédito) y, más adelante, un clasificador que entregue **probabilidades por categoría**.
 
-## Dataset
+## Datos que uso
 
-- **Referencia de datos:** [apostaremczak/churn-prediction](https://github.com/apostaremczak/churn-prediction) → Kaggle [KKBox Churn](https://www.kaggle.com/competitions/kkbox-churn-prediction-challenge)
-- **Archivos (en `data/raw/`):** `train_v2.csv`, `members_v3.csv`, `transactions_v2.csv`
-- **Setup:** [`docs/DATA_SETUP.md`](docs/DATA_SETUP.md)
-- **Estrategia de volumen:** piloto **1.000 usuarios** → escalado incremental
+- Referencia de estructura: [apostaremczak/churn-prediction](https://github.com/apostaremczak/churn-prediction)
+- Fuente: [KKBox Churn — Kaggle](https://www.kaggle.com/competitions/kkbox-churn-prediction-challenge)
+- Archivos: `train_v2.csv`, `members_v3.csv`, `transactions_v2.csv`
+- En esta fase trabajé con un **piloto de 1.000 usuarios**; el escalado viene después.
 
-## Enfoque metodológico (2 fases)
+## Fases del trabajo
 
-| Fase | Objetivo | Método |
-|------|----------|--------|
-| **1** | Explorar variables y crear 5 clusters de riesgo | EDA + K-Means (k=5) sobre variables numéricas |
-| **2** | Clasificación automática con probabilidades | Red neuronal / clasificador multidimensional (5 salidas) |
+| Fase | Qué hice / haré | Método |
+|------|-----------------|--------|
+| **1** (actual) | Explorar datos y crear 5 perfiles de riesgo | K-Means (k=5) + caracterización + Excel por categoría |
+| **2** | Clasificación automática con probabilidades | Red neuronal multidimensional (5 clases) |
 
-Variables **categóricas** (ciudad, género, método de pago) → **caracterización de perfiles**, no clustering.
+Las variables categóricas (ciudad, género, etc.) las uso para **describir** cada grupo; al clustering entran las **numéricas** de transacciones, como acordamos en asesoría.
+
+## Cuaderno para mi profesor (Colab, ya ejecutado)
+
+Este es el entregable principal de la Fase 1: paso a paso, gráficos e interpretación en mi voz.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb)
+
+`notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` — **incluye las salidas de mi corrida** (tablas y figuras).
 
 ## Estructura del repositorio
 
 ```
 pdgrado/
-├── docs/                    # Entregables del seminario y plan de trabajo
-├── notebooks/               # Notebooks Colab (EDA, clustering, modelo)
-├── src/                     # Código reutilizable
-├── data/                    # Datos locales (gitignored)
-└── outputs/                 # Excels por cluster, figuras (gitignored)
+├── docs/           # Contexto, vacíos, preguntas de investigación
+├── notebooks/      # Colab con resultados del piloto
+├── src/            # Código del pipeline
+├── scripts/        # Descarga de datos y ejecución del piloto
+├── data/           # CSV locales (no van a Git)
+└── outputs/        # Excel por categoría de riesgo
 ```
-
-## Plataforma de ejecución
-
-**Recomendación:** Google Colab para Fase 1 (piloto 1.000 usuarios).  
-Kaggle se usa para descargar datos y, si aplica, escalar con GPU. Detalle en [`docs/04-roadmap.md`](docs/04-roadmap.md).
 
 ## Documentación del seminario
 
-- [1. Contexto](docs/01-contexto.md)
-- [2. Vacíos en la literatura](docs/02-vacios-literatura.md)
-- [3. Preguntas de investigación](docs/03-preguntas-investigacion.md)
-- [4. Roadmap paso a paso](docs/04-roadmap.md)
-- [5. Próximos pasos (reunión con asesor)](docs/05-proximos-pasos-asesor.md)
-- [Abrir notebook en Colab](docs/COLAB.md)
+- [Contexto](docs/01-contexto.md)
+- [Vacíos en la literatura](docs/02-vacios-literatura.md)
+- [Preguntas de investigación](docs/03-preguntas-investigacion.md)
+- [Roadmap](docs/04-roadmap.md)
+- [Notas para la reunión con mi asesor](docs/05-proximos-pasos-asesor.md)
+- [Enlace al notebook Colab](docs/COLAB.md)
 
-## Inicio rápido
+## Cómo reproduje el piloto en mi máquina
 
 ```bash
-# 1. Referencia (opcional, local)
-bash scripts/setup_reference.sh
-
-# 2. Descargar CSV (Kaggle API) — ver DATA_SETUP.md
 bash scripts/download_data.sh
-
-# 3. Piloto clustering
-python scripts/run_pilot.py
+.venv/bin/python scripts/run_pilot.py
 ```
 
-### Notebook principal (Colab)
+Para regenerar el notebook con salidas:
 
-Abre en Google Colab (recomendado para el profesor):
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb)
-
-Archivo: `notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` — paso a paso, gráficos e interpretaciones en lenguaje sencillo.
-
-Notebook técnico corto: `notebooks/01_eda_clustering_piloto.ipynb`
+```bash
+.venv/bin/python scripts/execute_colab_notebook.py
+```
 
 ## Licencia
 

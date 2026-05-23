@@ -1,51 +1,48 @@
-# Próximos pasos — reunión con asesor (1 página)
+# Notas para mi reunión con el asesor
 
-**Fecha objetivo:** próxima semana  
-**Estudiante:** Daniel Restrepo Ospina
+**Daniel Restrepo Ospina** — próxima semana
 
-## Lo acordado en asesoría (8 abr 2026)
+## Lo que acordamos (8 abr 2026)
 
-1. No empezar por red neuronal; empezar por **5 clusters de riesgo**.
-2. Piloto con **~1.000 usuarios** antes de escalar.
-3. Priorizar archivo **`transactions`** + variables **numéricas**; categóricas para **perfil**.
-4. Exportar usuarios en **5 hojas Excel** y analizar comportamiento por grupo.
-5. Lenguaje del proyecto: **riesgo / prospectiva**, no solo “churn sí/no”.
-6. Plataforma sugerida: **Google Colab** (muestra pequeña).
+1. Empezar por **5 clusters de riesgo**, no por red neuronal.
+2. Piloto con **~1.000 usuarios**.
+3. Priorizar **`transactions`** y variables **numéricas**; categóricas para perfil.
+4. Exportar usuarios en **5 hojas Excel**.
+5. Hablar de **riesgo / prospectiva**, no solo churn sí/no.
+6. Trabajar primero en muestra pequeña (Colab me sirvió para eso).
 
-## Lo que traigo a la reunión
+## Lo que le llevo en esta reunión
 
-| # | Entregable | Dónde |
-|---|------------|-------|
-| 1 | Repo GitHub con estructura y documentación | `github.com/danielrpo1/pdgrado` (o nombre final) |
-| 2 | Borrador **Contexto** y **Vacíos en literatura** | `docs/01`, `docs/02` |
-| 3 | Pregunta de investigación alineada (5 categorías) | `docs/03` |
-| 4 | Notebook Colab: inventario de variables + K-Means piloto | `notebooks/01_eda_clustering_piloto.ipynb` |
-| 5 | Resultado preliminar: tabla % `is_churn` por cluster | salida del notebook |
-| 6 | 5 Excels (o 1 libro con 5 hojas) por cluster | `outputs/clusters/` |
+| Entregable | Dónde |
+|------------|-------|
+| Repositorio GitHub | https://github.com/danielrpo1/pdgrado |
+| Notebook Colab **ya ejecutado** (gráficos + interpretación) | `notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` |
+| Borrador contexto y vacíos | `docs/01`, `docs/02` |
+| Pregunta de investigación (5 categorías) | `docs/03` |
+| Excel cinco hojas | `outputs/clusters/usuarios_por_riesgo.xlsx` (local) |
 
-## Decisiones que pido validar
+## Resultados de mi piloto (semilla 42)
 
-1. ¿Ordenamos clusters por **% churn ascendente** para etiquetar riesgo 0 (bajo) → 4 (alto)?
-2. ¿Confirmamos **solo transactions + members** para el piloto, sin `user_logs`?
-3. ¿La pregunta principal del seminario es la de **características comportamentales** (Q en `docs/03`)?
-4. ¿Siguiente hito académico es **marco teórico + estado del arte** con foco en clasificación multidimensional?
+| Riesgo | Usuarios | % churn |
+|--------|----------|---------|
+| 0 (bajo) | 712 | ~31% |
+| 1 | 20 | ~95% |
+| 2 | 177 | ~97% |
+| 3 | 83 | 100% |
+| 4 (alto) | 8 | 100% |
 
-## Plan inmediato post-reunión
+La forma me convence: a mayor categoría, mayor churn observado.
 
-- Completar 15–20 referencias APA (vacíos 2.1–2.3).
-- Refinar perfiles narrativos por cluster (qué hacer con categoría 0 vs 4).
-- Escalar muestra (5k → 10k) si perfiles son estables.
-- Diseñar arquitectura NN 5-way (Fase 2).
+## Preguntas que quiero validar con usted
 
-## Riesgos / mitigaciones
+1. ¿Le parece bien ordenar los clusters por **% churn** para etiquetar 0–4?
+2. ¿Seguimos sin `user_logs` hasta validar transacciones?
+3. ¿La pregunta principal del seminario queda la de **variables comportamentales vs. riesgo en 5 categorías**?
+4. ¿Próximo hito académico: marco teórico + clasificación multidimensional?
 
-| Riesgo | Mitigación |
-|--------|------------|
-| Dataset muy grande | Muestra 1k; agregación por usuario |
-| `user_logs` 30 GB | Fase 2; agregados mensuales |
-| Clusters sin orden de riesgo | Post-procesar por % churn |
-| Colab sin datos | Kaggle API + Drive |
+## Después de la reunión (mi plan)
 
-## Enlace Colab (completar tras primera ejecución)
-
-`[Pegar aquí URL del notebook en Colab después de Run All]`
+- Completar referencias APA en vacíos de literatura.
+- Escribir narrativa de perfil por categoría en el informe.
+- Escalar muestra si usted lo ve estable.
+- Diseñar Fase 2: red neuronal 5 clases con probabilidades.
