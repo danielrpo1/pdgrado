@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ejecuta piloto de clustering (1000 usuarios) si los CSV están en data/raw."""
+"""Ejecuta piloto de clustering (10.000 usuarios por defecto) si los CSV están en data/raw."""
 
 import sys
 from pathlib import Path

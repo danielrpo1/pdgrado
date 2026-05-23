@@ -6,14 +6,14 @@
 |----------|------------------|--------------|
 | Datos KKBox | Integración directa con API/dataset | Descarga vía `kaggle` CLI o manual a Drive |
 | RAM / tiempo | Límite sesión; dataset grande pesado | Similar en free; Colab Pro más RAM |
-| Muestra 1.000 usuarios | ✅ Suficiente en ambos | ✅ **Recomendado por asesor** |
+| Muestra 10.000 usuarios | ✅ Suficiente en ambos | ✅ Piloto documentado en Colab |
 | `user_logs` 30 GB | Incómodo | Incómodo — **evitar en piloto** |
-| Revisión con profesor | Link Kaggle | Link Colab + repo GitHub |
+| Revisión / demo | Link Kaggle | Link Colab + repo GitHub |
 | Versionado código | Kernel en Kaggle | **Notebook en GitHub** + Colab |
 
 ### Recomendación
 
-1. **Colab** para ejecutar el piloto (EDA + K-Means, 1.000 usuarios), como acordaste con el profesor.
+1. **Colab** para el piloto documentado (EDA + K-Means, **10.000 usuarios** en la corrida actual).
 2. **Kaggle** solo como **origen de datos** (descargar `transactions`, `members`, `train`).
 3. **GitHub** (este repo) como fuente de verdad: notebooks, `src/`, documentación del seminario.
 

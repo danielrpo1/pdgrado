@@ -38,7 +38,7 @@ El dataset público **KKBox Churn Prediction** (WSDM Cup 2018) modela el retiro 
 ## 1.5 Alcance (Fase actual — acordado con asesor)
 
 1. **Análisis exploratorio:** inventario de variables numéricas vs. categóricas.
-2. **Clustering piloto:** K-Means con **k = 5** sobre muestra de **1.000 usuarios**, priorizando `transactions` + agregados de `members`.
+2. **Clustering piloto:** K-Means con **k = 5** sobre muestra de **10.000 usuarios** (validación inicial con 1.000), priorizando `transactions` + agregados de `members`.
 3. **Caracterización:** distribución de variables por cluster; exportación a **5 hojas Excel**.
 4. **Siguiente entrega:** marco teórico, estado del arte, clasificadores multidimensionales en redes neuronales.
 
