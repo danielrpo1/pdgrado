@@ -15,18 +15,20 @@ Coloca estos CSV en `data/raw/` (no se suben a Git):
 
 **No necesitas** `user_logs` (~30 GB) para la Fase 1.
 
-## Opción A — Kaggle CLI (recomendada)
+## Opción A — Script automático (recomendada)
 
-1. Cuenta Kaggle → Settings → **Create New API Token** → `kaggle.json`
-2. `mkdir -p ~/.kaggle && mv ~/Downloads/kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json`
-3. `pip install kaggle`
-4. Desde la raíz del proyecto:
+Usa el dataset público [qmdo97/kkboxdataset](https://www.kaggle.com/datasets/qmdo97/kkboxdataset) (mismos CSV que la competencia WSDM).
+
+1. Token en `~/.kaggle/access_token` (nuevo) o `kaggle.json` (legacy)
+2. Desde la raíz del proyecto:
 
 ```bash
 bash scripts/download_data.sh
 ```
 
-Si los nombres tras descomprimir difieren (`train.csv` vs `train_v2.csv`), renómbralos o crea enlaces simbólicos.
+**Nota:** La competencia directa puede devolver `403` hasta que aceptes las reglas en kaggle.com; el script usa el dataset público equivalente.
+
+Si los nombres tras descomprimir difieren (`train.csv` vs `train_v2.csv`), renómbralos.
 
 ## Opción B — Copiar desde el repo de referencia
 

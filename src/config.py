@@ -26,7 +26,6 @@ CLUSTER_FEATURE_COLS = [
     "price_ntd_mean",
     "amount_paid_ntd_sum",
     "amount_paid_ntd_mean",
-    "payment_num_total_max",
     "transaction_count",
     "cancel_count",
     "auto_renew_ratio",

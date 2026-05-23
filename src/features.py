@@ -38,22 +38,26 @@ def build_user_features(
     df["discount"] = df["price_ntd"] - df["amount_paid_ntd"]
     df["is_discount"] = (df["discount"] > 0).astype("uint8")
 
-    grouped = df.groupby("msno", as_index=False).agg(
-        purchased_membership_length_days_mean=("purchased_membership_length_days", "mean"),
-        price_ntd_mean=("price_ntd", "mean"),
-        amount_paid_ntd_sum=("amount_paid_ntd", "sum"),
-        amount_paid_ntd_mean=("amount_paid_ntd", "mean"),
-        payment_num_total_max=("payment_num_total", "max"),
-        transaction_count=("msno", "count"),
-        cancel_count=("is_cancel", "sum"),
-        auto_renew_ratio=("is_auto_renew", "mean"),
-        first_tx=("transaction_date", "min"),
-        last_tx=("transaction_date", "max"),
-        last_expire=("membership_expire_date", "max"),
-        time_since_registration_days_mean=("time_since_registration_days", "mean"),
-        discount_mean=("discount", "mean"),
-        is_discount_ratio=("is_discount", "mean"),
-    )
+    agg_spec: dict = {
+        "purchased_membership_length_days_mean": ("purchased_membership_length_days", "mean"),
+        "price_ntd_mean": ("price_ntd", "mean"),
+        "amount_paid_ntd_sum": ("amount_paid_ntd", "sum"),
+        "amount_paid_ntd_mean": ("amount_paid_ntd", "mean"),
+        "transaction_count": ("msno", "count"),
+        "cancel_count": ("is_cancel", "sum"),
+        "auto_renew_ratio": ("is_auto_renew", "mean"),
+        "first_tx": ("transaction_date", "min"),
+        "last_tx": ("transaction_date", "max"),
+        "last_expire": ("membership_expire_date", "max"),
+        "discount_mean": ("discount", "mean"),
+        "is_discount_ratio": ("is_discount", "mean"),
+    }
+    if "time_since_registration_days" in df.columns:
+        agg_spec["time_since_registration_days_mean"] = (
+            "time_since_registration_days",
+            "mean",
+        )
+    grouped = df.groupby("msno", as_index=False).agg(**agg_spec)
 
     grouped["days_active_span"] = (grouped["last_tx"] - grouped["first_tx"]).dt.days.clip(
         lower=0

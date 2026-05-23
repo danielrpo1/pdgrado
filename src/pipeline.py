@@ -44,7 +44,9 @@ def run_pilot(
     members = load_members(data_dir)
     transactions = load_transactions(data_dir)
 
-    pilot_msno = sample_users(train, sample_size, RANDOM_STATE)
+    # Solo usuarios con transacciones (evita perder filas tras el merge)
+    train_with_tx = train[train["msno"].isin(transactions["msno"].unique())]
+    pilot_msno = sample_users(train_with_tx, sample_size, RANDOM_STATE)
     tx = transactions[transactions["msno"].isin(pilot_msno)]
     mem = members[members["msno"].isin(pilot_msno)]
 
