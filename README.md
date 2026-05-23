@@ -47,6 +47,7 @@ Kaggle se usa para descargar datos y, si aplica, escalar con GPU. Detalle en [`d
 - [3. Preguntas de investigación](docs/03-preguntas-investigacion.md)
 - [4. Roadmap paso a paso](docs/04-roadmap.md)
 - [5. Próximos pasos (reunión con asesor)](docs/05-proximos-pasos-asesor.md)
+- [Abrir notebook en Colab](docs/COLAB.md)
 
 ## Inicio rápido
 
@@ -61,7 +62,15 @@ bash scripts/download_data.sh
 python scripts/run_pilot.py
 ```
 
-O en Colab: `notebooks/01_eda_clustering_piloto.ipynb`
+### Notebook principal (Colab)
+
+Abre en Google Colab (recomendado para el profesor):
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/danielrpo1/pdgrado/blob/main/notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb)
+
+Archivo: `notebooks/Colab_Piloto_5_Categorias_Riesgo_KKBox.ipynb` — paso a paso, gráficos e interpretaciones en lenguaje sencillo.
+
+Notebook técnico corto: `notebooks/01_eda_clustering_piloto.ipynb`
 
 ## Licencia
 
